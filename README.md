@@ -15,8 +15,8 @@ unfair-dice-simulation is in a very early stage of its development, don't expect
 
 ### Dependencies
 * GNU Make (build)
-* Clang compiler
-* OpenSceneGraph (odg): for 3D rendering
-* Boost: for ODE solving, and for some container types
-* nlohmann-json: for config files parsing
+* Clang compiler (build)
+* OpenSceneGraph (osg): for 3D rendering (build, run)
+* Boost: for ODE solving, and for some container types (build: header-only library)
+* nlohmann-json: for config files parsing (build: header-only library)
 

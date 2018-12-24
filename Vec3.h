@@ -20,7 +20,9 @@ public:
   Float operator()(unsigned idx) const { // 1-based index access
     return (*this)[idx-1];
   }
-  Float len() const {return sqrt((*this)(X)*(*this)(X) + (*this)(Y)*(*this)(Y) + (*this)(Z)*(*this)(Z));}
+  static Vec3 one(unsigned idx, Float val) {Vec3 vec(0,0,0); vec(idx) = val; return vec;}
+  Float len2() const {return (*this)(X)*(*this)(X) + (*this)(Y)*(*this)(Y) + (*this)(Z)*(*this)(Z);}
+  Float len() const {return sqrt(len2());}
   friend std::ostream& operator<<(std::ostream &os, const Vec3 &v) {
     os << "{" << v(X) << "," << v(Y) << "," << v(Z) << "}";
     return os;

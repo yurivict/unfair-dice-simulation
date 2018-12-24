@@ -1,6 +1,6 @@
 #include "all-headers.h"
 
-// see a collision detection library: /usr/ports/math/libccd
+// see the collision detection library: /usr/ports/math/libccd
 
 //
 // Cube parameters
@@ -16,6 +16,7 @@ public:
     Vec3  w0;         // initial rotation vector
   }; // Motion
   // static params
+  Float mass;
   Vec3  size;
   Vec3  CM;         // center of mass relative to the center of the cube
   Vec3  Iprincipal; // principal values of the rotational mass, relative to the center of mass
@@ -37,6 +38,7 @@ public:
       return v;
     };
     CubeParams params;
+    params.mass        = j["mass"];
     params.size        = parseV3("size");
     params.CM          = parseV3("cm");
     params.Iprincipal  = parseV3("Iprincipal");
@@ -140,6 +142,12 @@ private:
   static bool isOutside(const Vec3 &p, const Wall &wall) {
     return (wall.pt-p)*wall.normal > 0;
   }
+  //Float energy(const Vec3 &p, const Vec3 &v, const Vec3 &w) const {
+  //  Float potentialEnergy  = p(Z)*Params::g*cubeParams.mass;
+  //  Float kinericEnergy    = cubeParams.mass*v.len2()/2;
+  //  Float rotationalEnergy = ;
+  //  return potentialEnergy+kinericEnergy+rotationalEnergy;
+  //}
 }; // MotionSolver
 
 class MyTransformCallback : public osg::NodeCallback {
@@ -237,6 +245,34 @@ int main(int argc, char* argv[]) {
     { // osg::Box is created centered around its geometric center
       auto c = -cubeParams.CM;
       geodeCube->addDrawable(new osg::ShapeDrawable(new osg::Box(osg::Vec3(c(X), c(Y), c(Z)), cubeParams.size(1), cubeParams.size(2), cubeParams.size(3))));
+      // add dice-style markings on its sides
+      Float markSz = 0.05*std::min(cubeParams.size(X), std::min(cubeParams.size(Y),cubeParams.size(Z)));
+      auto addSphere = [&c,geodeCube](unsigned idx, int side, unsigned idx1, Float pct1, unsigned idx2, Float pct2) {
+        Vec3 v = c + Vec3::one(idx, side*cubeParams.size(idx)/2) + Vec3::one(idx1, pct1*cubeParams.size(idx1)/2) + Vec3::one(idx2, pct2*cubeParams.size(idx2)/2);
+        geodeCube->addDrawable(new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(v(X), v(Y), v(Z)), 0.1)));
+      };
+      Float PCT = 0.4;
+      addSphere(Y,-1, X,+0.0, Z,+0.0);   // 1
+      addSphere(X,+1, Y,+0.0, Z,+PCT);   // 2
+      addSphere(X,+1, Y,+0.0, Z,-PCT);
+      addSphere(Y,+1, X,+0.0, Z,+0.0);   // 3
+      addSphere(Y,+1, X,+PCT, Z,+PCT);
+      addSphere(Y,+1, X,-PCT, Z,-PCT);
+      addSphere(X,-1, Y,+PCT, Z,+PCT);   // 4
+      addSphere(X,-1, Y,+PCT, Z,-PCT);
+      addSphere(X,-1, Y,-PCT, Z,+PCT);
+      addSphere(X,-1, Y,-PCT, Z,-PCT);
+      addSphere(Z,+1, X,+PCT, Y,+PCT);   // 5
+      addSphere(Z,+1, X,+PCT, Y,-PCT);
+      addSphere(Z,+1, X,-PCT, Y,+PCT);
+      addSphere(Z,+1, X,-PCT, Y,-PCT);
+      addSphere(Z,+1, X,+0.0, Y,+0.0);
+      addSphere(Z,-1, X,+PCT, Y,+PCT);   // 6
+      addSphere(Z,-1, X,+PCT, Y,+0.0);
+      addSphere(Z,-1, X,+PCT, Y,-PCT);
+      addSphere(Z,-1, X,-PCT, Y,+PCT);
+      addSphere(Z,-1, X,-PCT, Y,+0.0);
+      addSphere(Z,-1, X,-PCT, Y,-PCT);
     }
 
     //geodeTime->addDrawable(new osg::ShapeDrawable(new osgWidget::Label("Abc", "")));

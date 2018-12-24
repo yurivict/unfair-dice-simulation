@@ -8,8 +8,8 @@
 #define RS_DBG_TREND(stmt...)
 
 //
-// RotationSolver: solved rotation ODE: https://en.wikipedia.org/wiki/Euler%27s_equations_(rigid_body_dynamics)
-//                 caches up
+// RotationSolver: solved the rotation ODE: https://en.wikipedia.org/wiki/Euler%27s_equations_(rigid_body_dynamics)
+//                 caches the solution, finds the cycle
 //                 F        - floating point type
 //                 M[3]     - fixed torque, should normally be 0,0,0, but is present here for tests and for generality
 
@@ -96,10 +96,10 @@ private:
     }
   }
   static F dist2(const Vec3 &x1, const Vec3 &x2) {
-    return sq(x1[0]-x2[0]) + sq(x1[1]-x2[1]) + sq(x1[2]-x2[2]);
+    return sq(x1(X)-x2(X)) + sq(x1(Y)-x2(Y)) + sq(x1(Z)-x2(Z));
   }
   static F len2(const Vec3 &x) {
-    return sq(x[0]) + sq(x[1]) + sq(x[2]);
+    return sq(x(X)) + sq(Y) + sq(x(Z));
   }
   static int deltaSign(F f1, F f2) {
     if (f1 < f2)

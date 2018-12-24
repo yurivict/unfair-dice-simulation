@@ -1,25 +1,4 @@
-/*
-#include <iostream>
-#include <array>
-#include <math.h>
-
-#include <osg/Geometry>
-#include <osg/Shape>
-#include <osg/ShapeDrawable>
-#include <osgViewer/Viewer>
-#include <osgGA/TrackballManipulator>
-#include <osg/MatrixTransform>
-
-#include <osgAnimation/BasicAnimationManager>
-#include <osgAnimation/Channel>
-#include <osgAnimation/UpdateMatrixTransform>
-#include <osgAnimation/StackedTranslateElement>
-#include <osgAnimation/StackedRotateAxisElement>
-*/
-
-#include "my-headers.h"
-
-#include <osgWidget/Label>
+#include "all-headers.h"
 
 // see a collision detection library: /usr/ports/math/libccd
 

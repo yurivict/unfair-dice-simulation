@@ -77,7 +77,7 @@ public:
 
 class Params {
 public:
-  static constexpr Float g = 0.2; // gravity const, acts towards Z-
+  static constexpr Float g = 0.4; // gravity const, acts towards Z-
   static const Vec3 initPosition;
 }; // Params
 
@@ -118,54 +118,53 @@ public:
     rotationIntegrator = new RotationMatrixIntegrator<Float, RotationSolver<Float>>(rotationSolver, motion0.rot0, t0, dt);
   }
   Res operator()(Float t) {
-    auto [p, v] = Parabola::evolve(t - t0, motion0.v0, Params::g);
-    p = motion0.x0 + p;
+    auto [x, v] = Parabola::evolve(t - t0, motion0.v0, Params::g);
+    x = motion0.x0 + x;
     const Mat3 r = (*rotationIntegrator)(t - t0);
     // energy
     if (t > energyPrintSec) {
-      std::cout << "energy(t=" << t << ")=" << energy(p, v, (*rotationSolver)(t)) << std::endl;
+      std::cout << "energy(t=" << t << ")=" << energy(x, v, (*rotationSolver)(t)) << std::endl;
       energyPrintSec = unsigned(t) + 1;
     }
     // detect collision with walls
     Vec3 collPt;
     int collWallIdx = -1;
-    if (isCollision(p, r, &collPt, &collWallIdx)) {
+    if (isCollision(x, r, &collPt, &collWallIdx)) {
       std::cout << "*** Collision: t=" << t << " pt=" << collPt << " wall=" << collWallIdx << std::endl;
     }
     // output
-    return Res(p, r);
+    return Res(x, r);
   }
 private:
-  bool isCollision(const Vec3 &p, const Mat3 &r, Vec3 *outCorner, int *outWallIdx) const {
+  bool isCollision(const Vec3 &x, const Mat3 &r, Vec3 *outCorner, int *outWallIdx) const {
     const Vec3 cm = -cubeParams.CM - cubeParams.size/2;
     const Vec3 cp = -cubeParams.CM + cubeParams.size/2;
-    for (Float x : {cm(1), cp(1)})
-      for (Float y : {cm(2), cp(2)})
-        for (Float z : {cm(3), cp(3)}) {
-          //std::cout << "... corner=" << Vec3(x,y,z) << " dist-to-wall0=" << (walls[0].pt-(p+r*Vec3(x,y,z)))*walls[0].normal << std::endl;
-          if (isOutside(p + r*Vec3(x,y,z), walls, outWallIdx)) {
-            *outCorner = Vec3(x,y,z);
+    for (Float xx : {cm(1), cp(1)})
+      for (Float yy : {cm(2), cp(2)})
+        for (Float zz : {cm(3), cp(3)}) {
+          if (isOutside(x + r*Vec3(xx,yy,zz), walls, outWallIdx)) {
+            *outCorner = Vec3(xx,yy,zz);
             return true;
           }
         }
     return false;
   }
-  static bool isOutside(const Vec3 &p, const std::vector<Wall> &walls, int *outWallIdx) {
+  static bool isOutside(const Vec3 &x, const std::vector<Wall> &walls, int *outWallIdx) {
     *outWallIdx = 0;
     for (auto &wall : walls) {
-      if (isOutside(p, wall))
+      if (isOutside(x, wall))
         return true;
       ++*outWallIdx;
     }
     return false;
   }
-  static bool isOutside(const Vec3 &p, const Wall &wall) {
-    return (wall.pt-p)*wall.normal > 0;
+  static bool isOutside(const Vec3 &x, const Wall &wall) {
+    return (wall.pt-x)*wall.normal > 0;
   }
-  Float energy(const Vec3 &p, const Vec3 &v, const Vec3 &w) const {
-    Float potentialEnergy  = p(Z)*Params::g*cubeParams.mass;
-    Float kinericEnergy    = cubeParams.mass*v.len2()/2;
-    Float rotationalEnergy = w*(Mat3(cubeParams.Iprincipal)*w)/2;
+  Float energy(const Vec3 &x, const Vec3 &v, const Vec3 &w) const {
+    Float potentialEnergy  = x(Z)*Params::g*cubeParams.mass;      // Eₚ = xₒgm
+    Float kinericEnergy    = cubeParams.mass*v.len2()/2;          // Eₖ = ½mv²
+    Float rotationalEnergy = w*(Mat3(cubeParams.Iprincipal)*w)/2; // Eᵣ = ½ωÎω
     return potentialEnergy+kinericEnergy+rotationalEnergy;
   }
 }; // MotionSolver
@@ -187,11 +186,11 @@ public:
       //std::cout << "tm=" << timeSec << " realTime=" << ::time(0) << std::endl;
 
       // evolve
-      auto [p, r] = (*motionSolver)(timeSec);
+      auto [x, r] = (*motionSolver)(timeSec);
       r = r.t();
 
       // matrix
-      osg::Matrix tranMat = osg::Matrix::translate(p(X),p(Y),p(Z));
+      osg::Matrix tranMat = osg::Matrix::translate(x(X),x(Y),x(Z));
       osg::Matrix rotMat(
         r(1,1), r(1,2), r(1,3), 0,
         r(2,1), r(2,2), r(2,3), 0,

@@ -10,6 +10,7 @@ typedef double Float;
 class Mat3 : public boost::array<Vec3, 3> {
 public:
   Mat3() { }
+  Mat3(const Vec3 &v) : boost::array<Vec3, 3>({{Vec3(v(X),0,0), Vec3(0,v(Y),0), Vec3(0,0,v(Z))}}) { } // Vec3 -> diagonal matrix Mat3 constructor
   Mat3(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3) : boost::array<Vec3, 3>({{v1, v2, v3}}) { }
   Float& operator()(unsigned idx1, unsigned idx2) { // 1-based index access
     return (*this)[idx1-1](idx2);

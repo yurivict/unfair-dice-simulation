@@ -63,8 +63,14 @@ typedef osg::Matrixd::value_type Float;
 
 
 class Parabola {
+  typedef std::pair<Vec3/*pos*/,Vec3/*velocity*/> Res;
 public:
-  static Vec3 evolve(Float t, const Vec3 &v, Float g) {return Vec3(v(X)*t, v(Y)*t, v(Z)*t - 0.5*g*t*t);}
+  static Res evolve(Float t, const Vec3 &v, Float g) {
+    return Res(
+      Vec3(v(X)*t, v(Y)*t, v(Z)*t - 0.5*g*t*t),
+      Vec3(v(X), v(Y), v(Z) - g*t)
+    );
+  }
 };
 
 // params
@@ -98,20 +104,34 @@ private: // data
   CubeParams::Motion    motion0; // motion parameters of the current segment
   RotationSolver<Float>*                                  rotationSolver;
   RotationMatrixIntegrator<Float, RotationSolver<Float>>* rotationIntegrator;
+  unsigned             energyPrintSec;
 public:
-  MotionSolver(const CubeParams &newCubeParams, const std::vector<Wall> &newWalls) : cubeParams(newCubeParams), walls(newWalls), t0(0), motion0(cubeParams.motion) {
+  MotionSolver(const CubeParams &newCubeParams, const std::vector<Wall> &newWalls)
+  : cubeParams(newCubeParams),
+    walls(newWalls),
+    t0(0),
+    motion0(cubeParams.motion),
+    energyPrintSec(0)
+  {
     // initial solvers
     rotationSolver = new RotationSolver<Float>(cubeParams.Iprincipal, Vec3(0,0,0)/*M*/, motion0.w0, t0, dt);
     rotationIntegrator = new RotationMatrixIntegrator<Float, RotationSolver<Float>>(rotationSolver, motion0.rot0, t0, dt);
   }
   Res operator()(Float t) {
-    const Vec3 p = motion0.x0 + Parabola::evolve(t - t0, motion0.v0, Params::g);
+    auto [p, v] = Parabola::evolve(t - t0, motion0.v0, Params::g);
+    p = motion0.x0 + p;
     const Mat3 r = (*rotationIntegrator)(t - t0);
+    // energy
+    if (t > energyPrintSec) {
+      std::cout << "energy(t=" << t << ")=" << energy(p, v, (*rotationSolver)(t)) << std::endl;
+      energyPrintSec = unsigned(t) + 1;
+    }
     // detect collision with walls
     Vec3 collPt;
     int collWallIdx = -1;
-    if (isCollision(p, r, &collPt, &collWallIdx))
+    if (isCollision(p, r, &collPt, &collWallIdx)) {
       std::cout << "*** Collision: t=" << t << " pt=" << collPt << " wall=" << collWallIdx << std::endl;
+    }
     // output
     return Res(p, r);
   }
@@ -142,12 +162,12 @@ private:
   static bool isOutside(const Vec3 &p, const Wall &wall) {
     return (wall.pt-p)*wall.normal > 0;
   }
-  //Float energy(const Vec3 &p, const Vec3 &v, const Vec3 &w) const {
-  //  Float potentialEnergy  = p(Z)*Params::g*cubeParams.mass;
-  //  Float kinericEnergy    = cubeParams.mass*v.len2()/2;
-  //  Float rotationalEnergy = ;
-  //  return potentialEnergy+kinericEnergy+rotationalEnergy;
-  //}
+  Float energy(const Vec3 &p, const Vec3 &v, const Vec3 &w) const {
+    Float potentialEnergy  = p(Z)*Params::g*cubeParams.mass;
+    Float kinericEnergy    = cubeParams.mass*v.len2()/2;
+    Float rotationalEnergy = w*(Mat3(cubeParams.Iprincipal)*w)/2;
+    return potentialEnergy+kinericEnergy+rotationalEnergy;
+  }
 }; // MotionSolver
 
 class MyTransformCallback : public osg::NodeCallback {

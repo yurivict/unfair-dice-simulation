@@ -31,7 +31,7 @@ public:
     return Vec3((*this)(X)*m, (*this)(Y)*m, (*this)(Z)*m);
   }
   Float operator*(const Vec3 &v) const { // scalar multiplication
-    return (*this)(1)*v(1) + (*this)(2)*v(2) + (*this)(3)*v(3);
+    return (*this)(X)*v(X) + (*this)(Y)*v(Y) + (*this)(Z)*v(Z);
   }
   Vec3 operator/(Float m) const {
     return Vec3((*this)(X)/m, (*this)(Y)/m, (*this)(Z)/m);

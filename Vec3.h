@@ -21,7 +21,7 @@ public:
     return (*this)[idx-1];
   }
   static Vec3 one(unsigned idx, Float val) {Vec3 vec(0,0,0); vec(idx) = val; return vec;}
-  Float len2() const {return (*this)(X)*(*this)(X) + (*this)(Y)*(*this)(Y) + (*this)(Z)*(*this)(Z);}
+  Float len2() const {return sq((*this)(X)) + sq((*this)(Y)) + sq((*this)(Z));}
   Float len() const {return sqrt(len2());}
   friend std::ostream& operator<<(std::ostream &os, const Vec3 &v) {
     os << "{" << v(X) << "," << v(Y) << "," << v(Z) << "}";
@@ -45,4 +45,6 @@ public:
   Vec3 operator-() const {
     return Vec3(-(*this)(X), -(*this)(Y), -(*this)(Z));
   }
+private:
+  static Float sq(Float f) {return f*f;}
 };

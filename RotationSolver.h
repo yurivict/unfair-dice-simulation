@@ -8,7 +8,7 @@
 #define RS_DBG_TREND(stmt...)
 
 //
-// RotationSolver: solved the rotation ODE: https://en.wikipedia.org/wiki/Euler%27s_equations_(rigid_body_dynamics)
+// RotationSolver: solves the rotation ODE: https://en.wikipedia.org/wiki/Euler%27s_equations_(rigid_body_dynamics)
 //                 caches the solution, finds the cycle
 //                 F        - floating point type
 //                 M[3]     - fixed torque, should normally be 0,0,0, but is present here for tests and for generality
@@ -62,13 +62,13 @@ private:
   void evolveUpTo(F tTo) { // evolves to the time tTo, or hits the cycle
     evolver e(I,M);
     Vec3 x = *cycle.rbegin();
-    F distPrev2 = dist2(cycle[0], x);
+    F distPrev2 = (cycle[0]-x).len2();
     while (tTo > lastEvolved) {
       // ODE solver step
       odeStepper.do_step(e, x, lastEvolved, dt);
       RS_DO_OUTPUT(std::cout << "after do_step: t=" << lastEvolved << "->" << lastEvolved+dt << " => x=" << x << std::endl;)
       // found the cycle?
-      F distNext2 = dist2(cycle[0], x);
+      F distNext2 = (cycle[0]-x).len2();
       auto newTrend = deltaSign(distPrev2, distNext2);
       if (newTrend != evolTrend) {
         RS_DBG_TREND(std::cout << "trend: change @ t=" << lastEvolved << ": old=" << evolTrend << " new=" << newTrend << std::endl;)
@@ -78,7 +78,7 @@ private:
           Vec3 dxdt;
           e(x, dxdt, lastEvolved);
           //dxdt *= dt;
-          if ((distPrev2+distNext2)/2. < len2(dxdt*dt)*2) {
+          if ((distPrev2+distNext2)/2. < (dxdt*dt).len2()*2) {
             foundCycle = true;
             RS_DBG_TREND(std::cout << "trend: Found cycle @ t=" << lastEvolved << std::endl;)
             return;
@@ -95,12 +95,6 @@ private:
       lastEvolved += dt;
     }
   }
-  static F dist2(const Vec3 &x1, const Vec3 &x2) {
-    return sq(x1(X)-x2(X)) + sq(x1(Y)-x2(Y)) + sq(x1(Z)-x2(Z));
-  }
-  static F len2(const Vec3 &x) {
-    return sq(x(X)) + sq(Y) + sq(x(Z));
-  }
   static int deltaSign(F f1, F f2) {
     if (f1 < f2)
       return +1;
@@ -108,5 +102,4 @@ private:
       return -1;
     return 0;
   }
-  static F sq(F f) {return f*f;}
 }; // RotationSolver

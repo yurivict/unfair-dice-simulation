@@ -1,7 +1,7 @@
 #pragma once
 
 //
-// RotationMatrixIntegrator integrates rotation evolution in the object space and produces rotation ebolution in the original coorditabe system
+// RotationMatrixIntegrator integrates rotation evolution in the object space and produces rotation evolution in the original coordinate system
 // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
 //
 
